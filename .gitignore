@@ -338,3 +338,6 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+# Assembly-CSharp exclusion for legal purposes
+ArtifactOfHaste/lib/Assembly-CSharp.dll
