@@ -340,4 +340,4 @@ ASALocalRun/
 healthchecksdb
 
 # Assembly-CSharp exclusion for legal purposes
-ArtifactOfHaste/lib/Assembly-CSharp.dll
+Assembly-CSharp.dll
