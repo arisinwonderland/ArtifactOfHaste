@@ -8,29 +8,49 @@ using RoR2;
 using R2API;
 using R2API.Utils;
 using TILER2;
+using static TILER2.MiscUtil;
 using BepInEx;
+using BepInEx.Configuration;
 using UnityEngine;
+using Path = System.IO.Path;
 
 namespace Grey.HasteArtifact
 {
-    [BepInPlugin("com.Grey.ArtifactOfHaste", "Artifact of Haste", "0.1.0")]
+    [BepInPlugin(modName, modGuid, "0.1.0")]
     [BepInDependency("com.bepis.r2api")]
     [BepInDependency("com.ThinkInvisible.TILER2")] 
     [R2APISubmoduleDependency(nameof(ResourcesAPI))]
     public class HasteArtifactPlugin : BaseUnityPlugin
     {
-        //internal static BepInEx.Logging.ManualLogSource _logger;
-        public void Awake()
+        public const string modName = "ArtifactOfHaste";
+        public const string modGuid = "com.Grey.ArtifactOfHaste";
+
+        internal static FilingDictionary<CatalogBoilerplate> itemList = new FilingDictionary<CatalogBoilerplate>();
+        private static ConfigFile config;
+        private void Awake()
         {
-            //_logger = Logger;
+            Debug.Log("Loading assets.");
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("ArtifactOfHaste.artifactofhaste"))
             {
                 var bundle = AssetBundle.LoadFromStream(stream);
                 var provider = new AssetBundleResourcesProvider("@ArtifactOfHaste", bundle);
                 ResourcesAPI.AddProvider(provider);
             }
-            Chat.AddMessage("Loaded Haste mod!");
-            //Logger.LogDebug("Loaded Haste!");
+
+            config = new ConfigFile(Path.Combine(Paths.ConfigPath, modGuid + ".cfg"), true);
+
+            Debug.Log("Creating mod info.");
+            itemList = T2Module.InitAll<CatalogBoilerplate>(new T2Module.ModInfo
+            {
+                displayName = "Artifact of Haste",
+                longIdentifier = "ArtifactOfHaste",
+                shortIdentifier = "AOH",
+                mainConfigFile = config
+            });
+
+            Debug.Log("Initializing mod.");
+            T2Module.SetupAll_PluginAwake(itemList);
+            T2Module.SetupAll_PluginStart(itemList);
         }
     }
 
@@ -48,6 +68,7 @@ namespace Grey.HasteArtifact
         public void Awake()
         {
             Chat.AddMessage("Loaded mod!");
+            Debug.Log("Awakening mod.");
         }
 
         public override void Install() {
@@ -62,9 +83,12 @@ namespace Grey.HasteArtifact
 
         private CharacterBody CharacterMaster_SpawnBody(On.RoR2.CharacterMaster.orig_SpawnBody orig, CharacterMaster self, GameObject bodyPrefab, Vector3 position, Quaternion rotation) {
             CharacterBody body = orig(self, bodyPrefab, position, rotation);
-            if (IsActiveAndEnabled() && body) {
-                body.gameObject.AddComponent<HasteController>().Init(body);
-                Debug.Log("A Haste controller was added to a unit!");
+            if (body) { 
+                Chat.AddMessage("Spawned body!");
+                if (IsActiveAndEnabled()) {
+                    body.gameObject.AddComponent<HasteController>().Init(body);
+                    Chat.AddMessage("A Haste controller was added to a unit!");
+                }
             }
             return body;
         }
